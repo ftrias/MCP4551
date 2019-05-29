@@ -25,7 +25,12 @@
     #include "ArduinoWrapper.h"
 #endif
 
-#include <Wire.h>
+// #include <Wire.h>
+
+// Address is determined by formulat below. If An is GND, value is 0.
+// If An is VCC, value is 1. If chip doesn't have the pin, then it is 1.
+//
+// 0b0101:A2:A1:A0
 
 // I2C Address of device
 #define MCP4551_DEFAULT_ADDRESS	0x2E	// A0 is connected to GND
@@ -48,8 +53,10 @@
 
 // Register addresses
 #define MCP4551_RA_WIPER	0x00
+#define MCP4551_RA_WIPER2	0x10
+#define MCP4551_RA_NVWIPER	0x20
+#define MCP4551_RA_NVWIPER2	0x30
 #define MCP4551_RA_TCON		0x40
-
 
 // Common WIPER values
 #define MCP4551_WIPER_MID	0x080
@@ -58,14 +65,24 @@
 
 class MCP4551 {
     public:
+       enum AddressPin { GND=1, VCC=0 };
+
         MCP4551();
         MCP4551(uint8_t address);
+        MCP4551(AddressPin a0, AddressPin a1=VCC, AddressPin a2=VCC);
         
         void begin(void);
         bool testConnection(void);
 
+	bool setRegister(uint8_t reg, uint16_t value);  // returns true if no errors
+	int16_t getRegister(uint8_t reg);
+
+	bool setFlag(uint8_t flag, bool value);
+
 	// Write the Wiper register
 	bool setWiper(uint16_t value);  // returns true if no errors
+	bool setNVWiper(uint16_t value);  // returns true if no errors
+	bool setOhm(int r, int r_ab, int nbits);
         
 	// Increments the Wiper register
 	bool incWiper(void);  // increments the wiper register - stops at 0x100
@@ -78,7 +95,6 @@ class MCP4551 {
 
     private:
         uint8_t devAddr;
-        uint16_t buffer;
 };
 
 #endif /* _MCP4551_H_ */
